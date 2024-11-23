@@ -13,12 +13,16 @@ export default function Map() {
       try {
         console.log('Fetching data...');
         const response = await axios.get(
-          'https://api.um.warszawa.pl/api/action/datastore_search',
+          'https://cors-anywhere.herokuapp.com/https://api.um.warszawa.pl/api/action/datastore_search',
           {
             params: {
               resource_id: 'ed6217dd-c8d0-4f7b-8bed-3b7eb81a95ba',
 			  limit: 5,
-            }
+            },
+			headers: {
+				"Origin": "https://warsaw-moss.vercel.app", // Explicitly set your app's origin
+				"X-Requested-With": "XMLHttpRequest" // Commonly used to signify an AJAX request
+			  }
           }
         );
 

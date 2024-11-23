@@ -1,6 +1,7 @@
 {
   "name": "my-app",
   "private": true,
+  "proxy": "http://localhost:3000/",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
@@ -13,6 +14,7 @@
     "-": "^0.0.1",
     "@types/leaflet": "^1.9.14",
     "axios": "^1.7.7",
+    "cors": "^2.8.5",
     "leaflet": "^1.9.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
