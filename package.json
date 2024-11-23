@@ -1,7 +1,7 @@
 {
   "name": "my-app",
   "private": true,
-  "proxy": "http://localhost:3000/",
+  "proxy": "https://api.um.warszawa.pl",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
