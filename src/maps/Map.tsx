@@ -22,8 +22,7 @@ export default function Map() {
           }
         );
 
-        console.log('Data fetched:', response.data);
-		console.log('response' + JSON.stringify(response.data));
+		console.log('response', response.data.result.records);
         setData(response.data.result.records);
         setLoading(false);
         alert(JSON.stringify(response.data.result.records)); // Show the response data in an alert
