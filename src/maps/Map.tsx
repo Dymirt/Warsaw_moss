@@ -12,10 +12,13 @@ export default function Map() {
     const fetchData = async () => {
       try {
         console.log('Fetching data...');
-        const response = await axios.get('/api/proxy', {
+        const response = await axios.get('https://cors-anywhere.herokuapp.com/https://api.um.warszawa.pl/api/action/datastore_search', {
           params: {
             resource_id: 'ed6217dd-c8d0-4f7b-8bed-3b7eb81a95ba',
             limit: 5,
+          },
+		  headers: {
+            'X-Requested-With': 'XMLHttpRequest'
           }
         });
 
