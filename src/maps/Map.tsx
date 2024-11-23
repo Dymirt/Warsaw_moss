@@ -12,17 +12,12 @@ export default function Map() {
     const fetchData = async () => {
       try {
         console.log('Fetching data...');
-        const response = await axios.get(
-          'https://cors-anywhere.herokuapp.com/https://api.um.warszawa.pl/api/action/datastore_search',
-          {
-            params: {
-              resource_id: 'ed6217dd-c8d0-4f7b-8bed-3b7eb81a95ba',
-			  limit: 5,
-            },
+        const response = await axios.get('/api/proxy', {
+          params: {
+            resource_id: 'ed6217dd-c8d0-4f7b-8bed-3b7eb81a95ba',
+            limit: 5,
           }
-        );
-
-		console.log('response', response.data.result.records);
+        });
         setData(response.data.result.records);
         setLoading(false);
         alert(JSON.stringify(response.data.result.records)); // Show the response data in an alert
@@ -43,16 +38,13 @@ export default function Map() {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <Marker position={[51.505, -0.09]}>
-          <Popup>
-            This is a popup
-          </Popup>
-        </Marker>
-        <Marker position={[51.505, -0.10]}>
-          <Popup>
-            This is a popup
-          </Popup>
-        </Marker>
+        {data.map((record, index) => (
+          <Marker key={index} position={[record.latitude, record.longitude]}>
+            <Popup>
+              {record.name}
+            </Popup>
+          </Marker>
+        ))}
       </MapContainer>
     </div>
   );

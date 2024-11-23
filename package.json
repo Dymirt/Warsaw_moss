@@ -1,7 +1,7 @@
 {
   "name": "my-app",
   "private": true,
-  "proxy": "https://warsaw-moss.vercel.app",
+  "proxy": "http://localhost:5173",
   "version": "0.0.0",
   "type": "module",
   "scripts": {

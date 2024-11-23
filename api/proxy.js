@@ -1,14 +1,17 @@
+import axios from 'axios';
+
 export default async function handler(req, res) {
-	const apiUrl = "https://api.um.warszawa.pl/api/action/datastore_search/?resource_id=ed6217dd-c8d0-4f7b-8bed-3b7eb81a95ba&limit=5";
+  const { resource_id, limit } = req.query;
 
-	const response = await fetch(apiUrl, {
-	  method: "GET",
-	  headers: {
-		"Origin": "https://warsaw-moss.vercel.app",
-		"X-Requested-With": "XMLHttpRequest",
-	  },
-	});
-
-	const data = await response.json();
-	res.status(200).json(data);
+  try {
+    const response = await axios.get('https://api.um.warszawa.pl/api/action/datastore_search', {
+      params: {
+        resource_id,
+        limit,
+      },
+    });
+    res.status(200).json(response.data);
+  } catch (error) {
+    res.status(error.response?.status || 500).json({ error: error.message });
   }
+}
