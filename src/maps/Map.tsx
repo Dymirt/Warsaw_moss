@@ -81,13 +81,18 @@ export default function Map() {
         <LayersControl position="topright">
           <LayersControl.Overlay checked name="Layer group with circles">
             <LayerGroup>
-              {data.map((record, index) => (
-                <Circle
-                  center={[record.lat, record.lon]}
-                  pathOptions={{ fillColor: "green" }}
-                  radius={800}
-                />
-              ))}
+			{data.map((record, index) => {
+                const values = record.data.map((d: any) => d.value);
+                const fillColor = `rgba(${values[0]*10}, ${values[1]*10}, ${values[2]*10}, ${values[3]*10})`; // Assuming the 4th value is a percentage for alpha
+                return (
+                  <Circle
+                    key={index}
+                    center={[record.lat, record.lon]}
+                    pathOptions={{ fillColor }}
+                    radius={800}
+                  />
+                );
+              })}
             </LayerGroup>
           </LayersControl.Overlay>
         </LayersControl>
