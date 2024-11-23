@@ -1,8 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import { MdOutlineMyLocation } from "react-icons/md";
 import L from "leaflet"; // Import leaflet for custom icon
+import {Circle, LayerGroup, LayersControl, Polyline } from "react-leaflet";
 import "./Maps.css";
+import airPolutionData from './air_polution.json'; // Import the JSON file
+import axios from 'axios';
+
+const center = [52.2298, 21.0118];
 
 function LocateButton({ setPosition }: { setPosition: (position: [number, number]) => void }) {
   const map = useMap();
@@ -42,6 +47,43 @@ function LocateButton({ setPosition }: { setPosition: (position: [number, number
 
 export default function Map() {
   const [position, setPosition] = useState<[number, number] | null>(null);
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [route, setRoute] = useState<[number, number][]>([]);
+
+  useEffect(() => {
+    try {
+      console.log('Data fetched:', airPolutionData);
+      setData(airPolutionData.result);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch data');
+      setLoading(false);
+    }
+  }, []); // Empty dependency array to run only once on mount
+
+  useEffect(() => {
+    const fetchRoute = async () => {
+      try {
+        const response = await axios.get('https://api.openrouteservice.org/v2/directions/driving-car', {
+          params: {
+            api_key: '5b3ce3597851110001cf62482931dab54e86458889bdec69775508ee', // Replace with your OpenRouteService API key
+            start: '21.0118,52.2298', // Starting point (longitude,latitude)
+            end: '21.080555,52.245703' // Ending point (longitude,latitude)
+          }
+        });
+
+        const coordinates = response.data.features[0].geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
+        setRoute(coordinates);
+      } catch (err) {
+        console.error('Error fetching route:', err);
+      }
+    };
+
+    fetchRoute();
+  }, []); // Empty dependency array to run only once on mount
 
   // Create a custom "tomato" colored marker icon
   const locationIcon = new L.DivIcon({
@@ -56,12 +98,11 @@ export default function Map() {
     <div className="MapContainer">
       {/* Map centered on Warsaw initially */}
       <MapContainer center={[52.2298, 21.0118]} zoom={13} scrollWheelZoom={false} style={{ height: "100%" }}>
+
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-
-        {/* Marker for the user's location with the custom tomato-colored icon */}
         {position && (
           <Marker position={position} icon={locationIcon}>
             <Popup>
@@ -72,6 +113,26 @@ export default function Map() {
 
         {/* Locate Button */}
         <LocateButton setPosition={setPosition} />
+        <LayersControl position="topright">
+          <LayersControl.Overlay checked name="Layer group with circles">
+            <LayerGroup>
+              {data.map((record, index) => {
+                const values = record.data.map((d: any) => d.value);
+                const fillColor = `rgba(${values[0]*10}, ${values[1]*10}, ${values[2]*10}, ${values[3]*10})`; // Assuming the 4th value is a percentage for alpha
+                return (
+                  <Circle
+                    key={index}
+                    center={[record.lat, record.lon]}
+                    pathOptions={{ fillColor }}
+                    radius={800}
+                  />
+                );
+              })}
+            </LayerGroup>
+          </LayersControl.Overlay>
+        </LayersControl>
+        {/* Polyline for the route */}
+        {route.length > 0 && <Polyline positions={route} color="blue" />}
       </MapContainer>
     </div>
   );
