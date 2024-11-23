@@ -1,10 +1,10 @@
-import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, Marker, Popup, TileLayer, useMap, Circle, LayerGroup, LayersControl } from "react-leaflet";
 import { MdOutlineMyLocation } from "react-icons/md";
 import React, { useState, useEffect } from "react";
 import "./Maps.css";
-import axios from 'axios';
+import airPolutionData from './air_polution.json'; // Import the JSON file
 
-import "./Maps.css";
+const center = [52.2298, 21.0118];
 
 function LocateButton({ setPosition }: { setPosition: (position: [number, number]) => void }) {
   const map = useMap();
@@ -47,28 +47,15 @@ export default function Map() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        console.log('Fetching data...');
-        const response = await axios.get('https://api.um.warszawa.pl/api/action/datastore_search', {
-          params: {
-            resource_id: 'ed6217dd-c8d0-4f7b-8bed-3b7eb81a95ba',
-            limit: 5,
-          },
-        });
-
-        console.log('Data fetched:', response.data);
-        setData(response.data.result.records);
-        setLoading(false);
-        alert(JSON.stringify(response.data.result.records)); // Show the response data in an alert
-      } catch (err) {
-        console.error('Error fetching data:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch data');
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    try {
+      console.log('Data fetched:', airPolutionData);
+      setData(airPolutionData.result);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch data');
+      setLoading(false);
+    }
   }, []); // Empty dependency array to run only once on mount
 
   return (
@@ -91,13 +78,19 @@ export default function Map() {
 
         {/* Locate Button */}
         <LocateButton setPosition={setPosition} />
-        {data.map((record, index) => (
-          <Marker key={index} position={[record.latitude, record.longitude]}>
-            <Popup>
-              {record.name}
-            </Popup>
-          </Marker>
-        ))}
+        <LayersControl position="topright">
+          <LayersControl.Overlay checked name="Layer group with circles">
+            <LayerGroup>
+              {data.map((record, index) => (
+                <Circle
+                  center={[record.lat, record.lon]}
+                  pathOptions={{ fillColor: "green" }}
+                  radius={800}
+                />
+              ))}
+            </LayerGroup>
+          </LayersControl.Overlay>
+        </LayersControl>
       </MapContainer>
     </div>
   );
