@@ -18,6 +18,8 @@ export default function Map() {
             limit: 5,
           }
         });
+
+        console.log('Data fetched:', response.data);
         setData(response.data.result.records);
         setLoading(false);
         alert(JSON.stringify(response.data.result.records)); // Show the response data in an alert
