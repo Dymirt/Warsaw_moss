@@ -1,9 +1,10 @@
 .banner-cont{
     z-index: 19999999;
     left:5vw;
-    height: 60vh;
-    top:16vh;
-    width: 40vh;
+    min-height: 31vh;
+    top:30vh;
+
+    min-width: 30vh;
     box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
 }
 input{
@@ -19,4 +20,25 @@ input{
     background-color: var(--main-color);
     padding: 3rm 1rem;
     color:#ffff;
+}
+.banner-cont svg{
+    fill :white;
+}
+input > svg {
+    fill: tomato!important;
+}
+.logoCont{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
+    font-size: 100px;
+}
+.copyright{
+    position: fixed;
+    font-size: 12px;
+    bottom: 8px;
+    margin: 10px;
+    writing-mode: vertical-rl;
+    font-weight: bold;
 }

@@ -24,7 +24,7 @@ const Banner = () => {
 
   return (
     <div className="banner-cont rounded-3xl overflow-hidden fixed bg-white">
-      <div className="header-banner text-white p-3">
+      <div className="header-banner text-white p-5">
         <h3 className="text-2xl font-bold mb-6 text-center">{Title}</h3>
         <div className="space-y-4">
           {/* Input for Destination A */}
@@ -38,7 +38,7 @@ const Banner = () => {
             />
             <FaMapMarkerAlt
               onClick={getCurrentLocation}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-tomato cursor-pointer"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-tomato cursor-pointer "
             />
           </div>
 

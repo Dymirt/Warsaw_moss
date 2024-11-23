@@ -19,12 +19,15 @@ body{
   width: 100%;
 }
 .leaflet-left {
-  bottom : 20vh;
-   right :6vh ;
-   top  : auto;
-   left: auto;
+  bottom: 20vh;
+  right: 6.8vh;
+  top: auto;
+  left: auto;
 }
 input:focus{
   padding: 13px 5px;
   outline: none;
+}
+svg{
+  fill:tomato;
 }
