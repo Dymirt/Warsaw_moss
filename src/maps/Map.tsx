@@ -16,8 +16,9 @@ export default function Map() {
           params: {
             resource_id: 'ed6217dd-c8d0-4f7b-8bed-3b7eb81a95ba',
             limit: 5,
+            apikey: '932af7ab-98b4-4729-8274-2c3ed1c744cd',
           },
-		  headers: {
+          headers: {
             'X-Requested-With': 'XMLHttpRequest'
           }
         });
