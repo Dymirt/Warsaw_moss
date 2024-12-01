@@ -2,10 +2,11 @@ import React, { useState, useEffect } from "react";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import { MdOutlineMyLocation } from "react-icons/md";
 import L from "leaflet"; // Import leaflet for custom icon
-import {Circle, LayerGroup, LayersControl, Polyline } from "react-leaflet";
+import {Polyline } from "react-leaflet";
 import "./Maps.css";
-import airPolutionData from './air_polution.json'; // Import the JSON file
 import axios from 'axios';
+import { AirSensors } from "./air_sensors/AirSensors";
+import { Trees } from "./trees/Trees";
 
 const center = [52.2298, 21.0118];
 
@@ -47,22 +48,7 @@ function LocateButton({ setPosition }: { setPosition: (position: [number, number
 
 export default function Map() {
   const [position, setPosition] = useState<[number, number] | null>(null);
-  const [data, setData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [route, setRoute] = useState<[number, number][]>([]);
-
-  useEffect(() => {
-    try {
-      console.log('Data fetched:', airPolutionData);
-      setData(airPolutionData.result);
-      setLoading(false);
-    } catch (err) {
-      console.error('Error fetching data:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch data');
-      setLoading(false);
-    }
-  }, []); // Empty dependency array to run only once on mount
 
   useEffect(() => {
     const fetchRoute = async () => {
@@ -113,24 +99,8 @@ export default function Map() {
 
         {/* Locate Button */}
         <LocateButton setPosition={setPosition} />
-        <LayersControl position="topright">
-          <LayersControl.Overlay checked name="Layer group with circles">
-            <LayerGroup>
-              {data.map((record, index) => {
-                const values = record.data.map((d: any) => d.value);
-                const fillColor = `rgba(${values[0]*10}, ${values[1]*10}, ${values[2]*10}, ${values[3]*10})`; // Assuming the 4th value is a percentage for alpha
-                return (
-                  <Circle
-                    key={index}
-                    center={[record.lat, record.lon]}
-                    pathOptions={{ fillColor }}
-                    radius={800}
-                  />
-                );
-              })}
-            </LayerGroup>
-          </LayersControl.Overlay>
-        </LayersControl>
+		<AirSensors />
+		<Trees />
         {/* Polyline for the route */}
         {route.length > 0 && <Polyline positions={route} color="blue" />}
       </MapContainer>

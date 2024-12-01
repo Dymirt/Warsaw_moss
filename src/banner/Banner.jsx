@@ -52,15 +52,7 @@ const Banner = () => {
           </div>
 
           {/* Transportation Icons */}
-          <div className="flex justify-between items-center mt-4 text-white">
-            <button className="flex flex-col items-center text-center hover:text-blue-300">
-              <FaCar size={24} />
-              <span className="text-sm mt-1">Car</span>
-            </button>
-            <button className="flex flex-col items-center text-center hover:text-blue-300">
-              <FaBus size={24} />
-              <span className="text-sm mt-1">Bus</span>
-            </button>
+          <div className="flex justify-evenly items-center mt-4 text-white">
             <button className="flex flex-col items-center text-center hover:text-blue-300">
               <FaBicycle size={24} />
               <span className="text-sm mt-1">Bike</span>
