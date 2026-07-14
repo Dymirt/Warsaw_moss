@@ -103,6 +103,35 @@
   text-transform: uppercase;
 }
 
+.route-origin {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #d8e0db;
+  border-radius: 12px;
+  background: #f0f7f3;
+  color: #16764a;
+  padding: 9px 12px;
+}
+
+.route-origin > span {
+  display: grid;
+  gap: 1px;
+}
+
+.route-origin small {
+  color: #668073;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.route-origin strong {
+  color: #234534;
+  font-size: 12px;
+}
+
 .route-form input[type='text'] {
   width: 100%;
   border: 1px solid #d8e0db;
@@ -356,20 +385,36 @@
   overflow-x: auto;
 }
 
-.route-options > span {
+.route-options > button {
   min-width: 88px;
+  border: 0;
   border-radius: 9px;
   background: #eef2ef;
   color: #56675e;
   padding: 6px 8px;
+  font: inherit;
   font-size: 8px;
   font-weight: 800;
+  text-align: left;
   text-transform: uppercase;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease;
 }
 
-.route-options > span.is-selected {
+.route-options > button:hover {
+  background: #e2ebe5;
+  color: #234534;
+  transform: translateY(-1px);
+}
+
+.route-options > button.is-selected {
   background: #ddefe4;
   color: #17653d;
+}
+
+.route-options > button:focus-visible {
+  outline: 3px solid rgba(22, 118, 74, 0.25);
+  outline-offset: 2px;
 }
 
 .route-options small {
@@ -565,5 +610,33 @@
 
   .panel-intro h1 {
     font-size: 31px;
+  }
+
+  .info-panel--has-route {
+    top: auto;
+    bottom: 12px;
+    left: 12px;
+    width: calc(100vw - 24px);
+    max-height: 48svh;
+    border-radius: 20px;
+    padding: 16px;
+  }
+
+  .info-panel--has-route .panel-intro,
+  .info-panel--has-route .utility-row,
+  .info-panel--has-route .route-message,
+  .info-panel--has-route .layer-guide,
+  .info-panel--has-route .data-note {
+    display: none;
+  }
+
+  .info-panel--has-route .route-result {
+    margin-top: 0;
+  }
+
+  .info-panel--has-route .route-form {
+    margin-top: 14px;
+    border-top: 1px solid #dce7df;
+    padding-top: 14px;
   }
 }

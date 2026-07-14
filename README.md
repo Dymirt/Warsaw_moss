@@ -11,7 +11,7 @@ requests, private Warsaw token, and persistent caches live in the separate
 
 ## Features
 
-- Search for a start and destination in Warsaw.
+- Build a route from the browser's current location to one selected destination.
 - Compare real pedestrian and bicycle alternatives.
 - Display the green score and detour for every route.
 - Show nearby environmental inventory records and live air stations.
@@ -63,7 +63,9 @@ VITE_API_BASE_URL=http://127.0.0.1:8000
 ```
 
 Open the URL printed by Vite, normally <http://localhost:5173>. The backend must
-allow this origin through its `CORS_ORIGINS` setting.
+allow this origin through its `CORS_ORIGINS` setting. Allow location access when
+the browser asks: each route starts from the user's current position, so the form
+only asks for a destination.
 
 `VITE_API_BASE_URL` is public configuration included in the browser bundle. Never
 put `WARSAW_API_TOKEN` or another secret in this repository, in Vercel, or in any
@@ -104,15 +106,21 @@ API request as mixed content.
 
 ```json
 {
-  "from": "Pałac Kultury i Nauki",
+  "from": {
+    "lat": 52.2317,
+    "lon": 21.006,
+    "label": "Your location"
+  },
   "to": "Łazienki Królewskie",
   "mode": "walking"
 }
 ```
 
-`mode` accepts `walking` or `cycling`. The response includes the resolved places,
-candidate GeoJSON lines, selected route ID, green scores, detour percentages,
-nearby environmental points, aggregate counts, warnings, and calculation time.
+`from` accepts the browser's WGS84 coordinates; a Warsaw address string remains
+supported for API clients that cannot use geolocation. `mode` accepts `walking` or
+`cycling`. The response includes the resolved places, candidate GeoJSON lines,
+selected route ID, green scores, detour percentages, nearby environmental points,
+aggregate counts, warnings, and calculation time.
 
 ### `GET /api/air`
 

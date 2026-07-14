@@ -25,22 +25,24 @@ const Banner = ({
   locationState,
   onBuildRoute,
   onLocate,
+  onSelectRoute,
   onToggleLayer,
   routeState,
 }) => {
   const isLocating = locationState.status === 'loading'
   const isRouting = routeState.status === 'loading'
-  const [from, setFrom] = useState('Pałac Kultury i Nauki')
-  const [to, setTo] = useState('Łazienki Królewskie')
+  const [to, setTo] = useState('')
   const [mode, setMode] = useState('walking')
   const result = routeState.result
   const selectedRoute = result?.routes.find(
     ({ id }) => id === result.selectedRouteId,
   )
+  const recommendedRouteId = result?.recommendedRouteId ?? result?.selectedRouteId
+  const isRecommendedRoute = selectedRoute?.id === recommendedRouteId
 
   function submitRoute(event) {
     event.preventDefault()
-    onBuildRoute({ from, to, mode })
+    onBuildRoute({ to, mode })
   }
 
   return (
@@ -53,7 +55,10 @@ const Banner = ({
         <span className="brand-year">Warsaw</span>
       </header>
 
-      <aside className="info-panel" aria-labelledby="app-title">
+      <aside
+        className={`info-panel${result ? ' info-panel--has-route' : ''}`}
+        aria-labelledby="app-title"
+      >
         <div className="panel-intro">
           <p className="eyebrow">Green routing for Warsaw</p>
           <h1 id="app-title">Take the greener way</h1>
@@ -63,25 +68,87 @@ const Banner = ({
           </p>
         </div>
 
+        {selectedRoute && (
+          <section className="route-result" aria-labelledby="route-result-title">
+            <div className="result-heading">
+              <div>
+                <p className="eyebrow">
+                  {isRecommendedRoute ? 'Recommended' : 'Selected alternative'}
+                </p>
+                <h2 id="route-result-title">
+                  {isRecommendedRoute ? 'Greener route' : 'Route alternative'}
+                </h2>
+              </div>
+              <span className="green-score">
+                {selectedRoute.greenScore ?? '—'}
+                <small>/ 100 green</small>
+              </span>
+            </div>
+            <p className="route-places">
+              <strong>{result.from.label}</strong>
+              <span aria-hidden="true">→</span>
+              <strong>{result.to.label}</strong>
+            </p>
+            <div className="route-stats">
+              <span><strong>{formatDistance(selectedRoute.distance)}</strong>distance</span>
+              <span><strong>{formatDuration(selectedRoute.duration)}</strong>estimated</span>
+              <span><strong>+{selectedRoute.detourPercent}%</strong>detour</span>
+            </div>
+            <p className="eco-counts">
+              {isRecommendedRoute ? (
+                <>
+                  Near the route: {result.ecoCounts.tree.toLocaleString()} trees,{' '}
+                  {result.ecoCounts.shrub.toLocaleString()} shrubs, and{' '}
+                  {result.ecoCounts.forest.toLocaleString()} forest records.
+                </>
+              ) : (
+                'Select Best green to show its detailed greenery points again.'
+              )}
+            </p>
+            <div className="route-options" aria-label="Compared route alternatives">
+              {result.routes.map((route, index) => {
+                const isSelected = route.id === result.selectedRouteId
+                const isRecommended = route.id === recommendedRouteId
+
+                return (
+                  <button
+                    key={route.id}
+                    type="button"
+                    className={isSelected ? 'is-selected' : ''}
+                    aria-pressed={isSelected}
+                    onClick={() => onSelectRoute(route.id)}
+                  >
+                    {isRecommended ? 'Best green' : `Option ${index + 1}`}
+                    <small>
+                      {route.greenScore ?? '—'}/100 · {formatDistance(route.distance)}
+                    </small>
+                  </button>
+                )
+              })}
+            </div>
+            {result.warnings.length > 0 && (
+              <p className="data-warning">
+                Some live greenery feeds did not respond; available records were used.
+              </p>
+            )}
+          </section>
+        )}
+
         <form className="route-form" onSubmit={submitRoute}>
+          <div className="route-origin" aria-label="Route starts at your current location">
+            <FaLocationArrow aria-hidden="true" />
+            <span>
+              <small>From</small>
+              <strong>Your current location</strong>
+            </span>
+          </div>
           <label>
-            <span>From</span>
-            <input
-              type="text"
-              value={from}
-              onChange={(event) => setFrom(event.target.value)}
-              placeholder="Street, landmark, or address"
-              autoComplete="street-address"
-              required
-            />
-          </label>
-          <label>
-            <span>To</span>
+            <span>Destination</span>
             <input
               type="text"
               value={to}
               onChange={(event) => setTo(event.target.value)}
-              placeholder="Your destination"
+              placeholder="Street, landmark, or address"
               autoComplete="off"
               required
             />
@@ -146,52 +213,6 @@ const Banner = ({
           {routeState.message}
         </p>
 
-        {selectedRoute && (
-          <section className="route-result" aria-labelledby="route-result-title">
-            <div className="result-heading">
-              <div>
-                <p className="eyebrow">Recommended</p>
-                <h2 id="route-result-title">Greener route</h2>
-              </div>
-              <span className="green-score">
-                {selectedRoute.greenScore ?? '—'}
-                <small>/ 100 green</small>
-              </span>
-            </div>
-            <p className="route-places">
-              <strong>{result.from.label}</strong>
-              <span aria-hidden="true">→</span>
-              <strong>{result.to.label}</strong>
-            </p>
-            <div className="route-stats">
-              <span><strong>{formatDistance(selectedRoute.distance)}</strong>distance</span>
-              <span><strong>{formatDuration(selectedRoute.duration)}</strong>estimated</span>
-              <span><strong>+{selectedRoute.detourPercent}%</strong>detour</span>
-            </div>
-            <p className="eco-counts">
-              Near the route: {result.ecoCounts.tree.toLocaleString()} trees,{' '}
-              {result.ecoCounts.shrub.toLocaleString()} shrubs, and{' '}
-              {result.ecoCounts.forest.toLocaleString()} forest records.
-            </p>
-            <div className="route-options" aria-label="Compared route alternatives">
-              {result.routes.map((route, index) => (
-                <span
-                  key={route.id}
-                  className={route.id === result.selectedRouteId ? 'is-selected' : ''}
-                >
-                  {route.id === result.selectedRouteId ? 'Best green' : `Option ${index + 1}`}
-                  <small>{route.greenScore ?? '—'}/100 · {formatDistance(route.distance)}</small>
-                </span>
-              ))}
-            </div>
-            {result.warnings.length > 0 && (
-              <p className="data-warning">
-                Some live greenery feeds did not respond; available records were used.
-              </p>
-            )}
-          </section>
-        )}
-
         <section className="layer-guide" aria-labelledby="layer-guide-title">
           <div className="section-heading">
             <h2 id="layer-guide-title">Map layers</h2>
@@ -223,7 +244,13 @@ const Banner = ({
                 </span>
                 <span className="layer-copy">
                   <strong>Route greenery</strong>
-                  <small>{result ? `${result.greenery.length} nearby map points` : 'Appears after routing'}</small>
+                  <small>
+                    {result
+                      ? isRecommendedRoute
+                        ? `${result.greenery.length} nearby map points`
+                        : 'Available on the Best green route'
+                      : 'Appears after routing'}
+                  </small>
                 </span>
                 <input
                   className="layer-toggle"

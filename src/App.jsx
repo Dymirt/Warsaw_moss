@@ -54,36 +54,43 @@ function App() {
     return () => controller.abort()
   }, [])
 
-  const locateUser = useCallback(() => {
+  const requestCurrentPosition = useCallback((successMessage) => {
     if (!navigator.geolocation) {
-      setLocationState({
-        status: 'error',
-        message: 'Your browser does not support location services.',
-      })
-      return
+      const error = new Error('Your browser does not support location services.')
+      setLocationState({ status: 'error', message: error.message })
+      return Promise.reject(error)
     }
 
     setLocationState({ status: 'loading', message: 'Finding your location...' })
 
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        setUserPosition([coords.latitude, coords.longitude])
-        setLocationState({
-          status: 'success',
-          message: 'Map centered on your current location.',
-        })
-      },
-      (error) => {
-        const message =
-          error.code === error.PERMISSION_DENIED
-            ? 'Location permission was not granted.'
-            : 'Your location could not be determined. Please try again.'
+    return new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(
+        ({ coords }) => {
+          const position = [coords.latitude, coords.longitude]
+          setUserPosition(position)
+          setLocationState({ status: 'success', message: successMessage })
+          resolve(position)
+        },
+        (geolocationError) => {
+          const message =
+            geolocationError.code === geolocationError.PERMISSION_DENIED
+              ? 'Location permission was not granted.'
+              : 'Your location could not be determined. Please try again.'
+          const error = new Error(message)
 
-        setLocationState({ status: 'error', message })
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
-    )
+          setLocationState({ status: 'error', message })
+          reject(error)
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+      )
+    })
   }, [])
+
+  const locateUser = useCallback(() => {
+    requestCurrentPosition('Map centered on your current location.').catch(
+      () => undefined,
+    )
+  }, [requestCurrentPosition])
 
   const toggleLayer = useCallback((layer) => {
     setActiveLayers((currentLayers) => ({
@@ -92,25 +99,58 @@ function App() {
     }))
   }, [])
 
-  const buildRoute = useCallback(async (routeRequest) => {
-    setRouteState({
-      status: 'loading',
-      result: null,
-      message: 'Finding alternatives and measuring nearby greenery...',
-    })
-
-    try {
-      const payload = await requestJson('/api/route', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(routeRequest),
+  const buildRoute = useCallback(
+    async ({ to, mode }) => {
+      setRouteState({
+        status: 'loading',
+        result: null,
+        message: 'Getting your current location...',
       })
 
-      setRouteState({ status: 'success', result: payload, message: '' })
-      setActiveLayers((currentLayers) => ({ ...currentLayers, greenery: true }))
-    } catch (error) {
-      setRouteState({ status: 'error', result: null, message: error.message })
-    }
+      try {
+        const [latitude, longitude] = await requestCurrentPosition(
+          'Starting from your current location.',
+        )
+        setRouteState({
+          status: 'loading',
+          result: null,
+          message: 'Finding alternatives and measuring nearby greenery...',
+        })
+
+        const payload = await requestJson('/api/route', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            from: { lat: latitude, lon: longitude, label: 'Your location' },
+            to,
+            mode,
+          }),
+        })
+        const result = {
+          ...payload,
+          recommendedRouteId: payload.selectedRouteId,
+        }
+
+        setRouteState({ status: 'success', result, message: '' })
+        setActiveLayers((currentLayers) => ({ ...currentLayers, greenery: true }))
+      } catch (error) {
+        setRouteState({ status: 'error', result: null, message: error.message })
+      }
+    },
+    [requestCurrentPosition],
+  )
+
+  const selectRoute = useCallback((routeId) => {
+    setRouteState((currentState) => {
+      if (!currentState.result?.routes.some(({ id }) => id === routeId)) {
+        return currentState
+      }
+
+      return {
+        ...currentState,
+        result: { ...currentState.result, selectedRouteId: routeId },
+      }
+    })
   }, [])
 
   return (
@@ -124,6 +164,7 @@ function App() {
         locationState={locationState}
         onBuildRoute={buildRoute}
         onLocate={locateUser}
+        onSelectRoute={selectRoute}
         onToggleLayer={toggleLayer}
         routeState={routeState}
       />

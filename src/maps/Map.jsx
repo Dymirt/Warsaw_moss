@@ -67,9 +67,16 @@ function FitRoute({ result }) {
     const route = result?.routes.find(({ id }) => id === result.selectedRouteId)
     if (!route) return
 
+    const size = map.getSize()
+    const isMobile = size.x <= 720
+
     map.fitBounds(
       route.geometry.coordinates.map(([longitude, latitude]) => [latitude, longitude]),
-      { padding: [48, 48], maxZoom: 16 },
+      {
+        paddingTopLeft: [32, isMobile ? 88 : 48],
+        paddingBottomRight: [32, isMobile ? Math.round(size.y * 0.5) : 48],
+        maxZoom: 16,
+      },
     )
   }, [map, result])
 
@@ -218,6 +225,11 @@ function RouteEndpoints({ result }) {
 }
 
 function Map({ activeLayers, airStations, routeResult, userPosition }) {
+  const recommendedRouteId =
+    routeResult?.recommendedRouteId ?? routeResult?.selectedRouteId
+  const isRecommendedRoute =
+    routeResult?.selectedRouteId === recommendedRouteId
+
   return (
     <section id="map" className="map-shell" aria-label="Interactive map of Warsaw">
       <MapContainer
@@ -242,7 +254,7 @@ function Map({ activeLayers, airStations, routeResult, userPosition }) {
 
         <RouteLines result={routeResult} />
 
-        {activeLayers.greenery && routeResult && (
+        {activeLayers.greenery && routeResult && isRecommendedRoute && (
           <LayerGroup>
             <GreeneryPoints points={routeResult.greenery} />
           </LayerGroup>
