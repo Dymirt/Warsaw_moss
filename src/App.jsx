@@ -50,7 +50,7 @@ function App() {
   }, [])
 
   return (
-    <main className="app-shell">
+    <main className="app-shell antialiased">
       <a className="skip-link" href="#map">
         Skip to the map
       </a>
