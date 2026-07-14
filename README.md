@@ -170,7 +170,7 @@ configured. It never returns the token itself.
 ├── .vercelignore
 ├── eslint.config.js
 ├── package.json
-├── vercel.json                # Vercel build and function-duration settings
+├── vercel.json                # Vercel build, Fluid Compute, and function settings
 └── vite.config.js             # Mounts the local same-origin API middleware
 ```
 
@@ -190,9 +190,11 @@ WARSAW_API_TOKEN=<your Warsaw API token>
 ```
 
 Enable it for Production and Preview, then redeploy. Do not upload `.env.local`;
-`.vercelignore` explicitly excludes local environment files. `vercel.json` allows
-up to 120 seconds for green-route calculation and shorter durations for the air and
-health functions.
+`.vercelignore` explicitly excludes local environment files. `vercel.json` enables
+Fluid Compute explicitly, including for Vercel projects created before it became
+the default. It allows up to 120 seconds for green-route calculation and shorter
+durations for the air and health functions. Those values fit within the current
+300-second Hobby-plan maximum for Fluid Compute.
 
 The route and greenery caches are held in function memory. They improve warm
 requests but are not guaranteed to survive a serverless restart or be shared across
