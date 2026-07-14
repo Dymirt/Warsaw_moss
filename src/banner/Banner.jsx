@@ -75,8 +75,8 @@ const Banner = ({
             <div className="result-heading">
               <div>
                 <p className="eyebrow">
-                  {selectedRoute.routeKind === 'tree-guided'
-                    ? 'Tree-guided route'
+                  {selectedRoute.routeKind === 'green-corridor'
+                    ? 'Citywide green corridor'
                     : isRecommendedRoute
                       ? 'Recommended'
                       : 'Selected alternative'}
@@ -106,8 +106,8 @@ const Banner = ({
               {selectedEcoCounts.forest.toLocaleString()} forest records.
               {selectedRoute.greenWaypoints?.length > 0 && (
                 <>
-                  {' '}Routed through {selectedRoute.greenWaypoints.length} tree{' '}
-                  {selectedRoute.greenWaypoints.length === 1 ? 'cluster' : 'clusters'}.
+                  {' '}Routed through {selectedRoute.greenWaypoints.length} green corridor{' '}
+                  {selectedRoute.greenWaypoints.length === 1 ? 'anchor' : 'anchors'}.
                 </>
               )}
             </p>
@@ -124,10 +124,10 @@ const Banner = ({
                     aria-pressed={isSelected}
                     onClick={() => onSelectRoute(route.id)}
                   >
-                    {route.routeKind === 'tree-guided'
+                    {route.routeKind === 'green-corridor'
                       ? isRecommended
-                        ? 'Tree guided · Best'
-                        : 'Tree guided'
+                        ? 'Green corridor · Best'
+                        : 'Green corridor'
                       : isRecommended
                         ? 'Best green'
                         : `Option ${index + 1}`}

@@ -221,9 +221,10 @@ function GreenWaypoints({ points = [] }) {
       }}
     >
       <Popup>
-        <strong>Tree-guided waypoint</strong>
+        <strong>Green corridor anchor</strong>
         <br />
-        Selected from a cluster of {point.treeCount} trees
+        Nearby: {point.treeCount} trees, {point.shrubCount} shrubs, and{' '}
+        {point.forestCount} forest records
       </Popup>
     </CircleMarker>
   ))

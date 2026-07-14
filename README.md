@@ -16,8 +16,8 @@ requests, private Warsaw token, and persistent caches live in the separate
 - Display the green score and detour for every route.
 - Show every environmental inventory record within 5 metres of each alternative.
 - Discover greenery across districts along longer Warsaw routes.
-- Generate a new tree-led route through ordered tree-cluster waypoints.
-- Display the intermediate tree-cluster anchors used for green routing.
+- Build a citywide green-density path from the complete greenery inventory.
+- Display the intermediate green-corridor anchors used for routing.
 - Display live air-quality stations.
 - Center the map on the user's location with explicit browser permission.
 - Deploy as a static Vite application on Vercel; no Vercel Function is required.
