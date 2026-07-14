@@ -156,8 +156,7 @@ configured. It never returns the token itself.
 ├── api/                       # Vercel Function entrypoints
 │   ├── air.js
 │   ├── health.js
-│   ├── route.js
-│   └── warsaw-proxy.js        # Restricted Edge bridge to the Warsaw API
+│   └── route.js
 ├── public/
 │   └── eco-navigate.svg
 ├── server/
@@ -197,10 +196,14 @@ the default. Function duration is left at Vercel's plan-supported default instea
 of being hard-coded; the current Fluid Compute default is 300 seconds on Hobby,
 Pro, and Enterprise plans. Functions run in Vercel's Frankfurt (`fra1`) region so
 the Warsaw API calls stay in Europe and avoid unnecessary transatlantic latency.
-On Vercel, Warsaw requests pass through a restricted Edge bridge because the city
-host does not accept direct connections from the Node function network. The bridge
-accepts only the air action and the three configured greenery resources, and it
-requires the same server-only token; it is not an open proxy.
+
+During production verification on July 14, 2026, the City of Warsaw API accepted
+local requests but did not accept outbound connections from either Vercel's Node or
+Edge function networks. The Vercel deployment therefore serves the frontend and
+route alternatives, but live air readings and greenery scoring require an external
+relay/backend with reachable egress, or an egress address that the city has
+allowlisted. This is an upstream network restriction rather than a Vercel build or
+function-duration issue.
 
 The route and greenery caches are held in function memory. They improve warm
 requests but are not guaranteed to survive a serverless restart or be shared across
