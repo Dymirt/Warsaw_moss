@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import Map from './maps/Map.jsx'
 import Banner from './banner/Banner.jsx'
+import { requestJson } from './api.js'
 import './App.css'
 
 function App() {
@@ -27,10 +28,9 @@ function App() {
 
     async function loadAirQuality() {
       try {
-        const response = await fetch('/api/air', { signal: controller.signal })
-        const payload = await response.json()
-
-        if (!response.ok) throw new Error(payload.error || 'Live air data is unavailable.')
+        const payload = await requestJson('/api/air', {
+          signal: controller.signal,
+        })
 
         setAirState({
           status: 'success',
@@ -99,14 +99,11 @@ function App() {
     })
 
     try {
-      const response = await fetch('/api/route', {
+      const payload = await requestJson('/api/route', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(routeRequest),
       })
-      const payload = await response.json()
-
-      if (!response.ok) throw new Error(payload.error || 'A route could not be built.')
 
       setRouteState({ status: 'success', result: payload, message: '' })
       setActiveLayers((currentLayers) => ({ ...currentLayers, greenery: true }))

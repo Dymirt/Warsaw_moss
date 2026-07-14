@@ -105,6 +105,10 @@ npm run dev
 
 Open the URL printed by Vite, normally `http://localhost:5173`.
 
+Do not open `dist/index.html` directly or serve `dist/` with a static-only server.
+The browser needs the same-origin `/api/*` middleware to geocode places, calculate
+routes, and keep the Warsaw token private.
+
 ## Available scripts
 
 | Command | Purpose |
@@ -172,6 +176,10 @@ host can serve `dist/`, but it cannot safely hold the Warsaw API token or execut
 the `/api/*` routes. For production, deploy the same server logic to a Node-capable
 runtime or adapt the two endpoints to serverless functions, then serve the browser
 build from the same origin.
+
+If the interface reports that the Eco Navigate API is not running, the frontend is
+being served without those `/api/*` routes. For local use, stop that static server
+and use `npm run dev`, or run `npm run build` followed by `npm run preview`.
 
 Recommended production work:
 
