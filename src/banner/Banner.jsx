@@ -1,71 +1,108 @@
-import React, { useState } from "react";
-import { FaMapMarkerAlt, FaBus, FaCar, FaBicycle, FaWalking } from "react-icons/fa";
+import { FaLeaf, FaLocationArrow, FaTree } from 'react-icons/fa'
+import { MdAir } from 'react-icons/md'
+import './Banner.css'
 
-const Banner = () => {
-  const [location, setLocation] = useState("");
-
-  const getCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setLocation("My Location"); // Optionally, reverse geocode to get a name
-        },
-        () => {
-          alert("Unable to fetch your location.");
-        }
-      );
-    } else {
-      alert("Geolocation is not supported by your browser.");
-    }
-  };
-
-  const Title = "Explore the Warsaw with us";
+const Banner = ({ activeLayers, locationState, onLocate, onToggleLayer }) => {
+  const isLocating = locationState.status === 'loading'
 
   return (
-    <div className="banner-cont rounded-3xl overflow-hidden fixed bg-white">
-      <div className="header-banner text-white p-5">
-        <h3 className="text-2xl font-bold mb-6 text-center">{Title}</h3>
-        <div className="space-y-4">
-          {/* Input for Destination A */}
-          <div className="relative">
-            <input
-              type="text"
-              value={location || ""}
-              placeholder="Enter your location"
-              onChange={(e) => setLocation(e.target.value)}
-              className="w-full px-4 py-3 rounded-md text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-            <FaMapMarkerAlt
-              onClick={getCurrentLocation}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-tomato cursor-pointer "
-            />
-          </div>
+    <>
+      <header className="brand-rail" aria-label="Eco Navigate">
+        <span className="brand-mark" aria-hidden="true">
+          <FaLeaf />
+        </span>
+        <span className="brand-name">Eco Navigate</span>
+        <span className="brand-year">Warsaw</span>
+      </header>
 
-          {/* Input for Destination B */}
-          <div>
-            <input
-              type="search"
-              placeholder="Enter destination"
-              className="w-full px-4 py-3 rounded-md text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-          </div>
-
-          {/* Transportation Icons */}
-          <div className="flex justify-evenly items-center mt-4 text-white">
-            <button className="flex flex-col items-center text-center hover:text-blue-300">
-              <FaBicycle size={24} />
-              <span className="text-sm mt-1">Bike</span>
-            </button>
-            <button className="flex flex-col items-center text-center hover:text-blue-300">
-              <FaWalking size={24} />
-              <span className="text-sm mt-1">Walk</span>
-            </button>
-          </div>
+      <aside className="info-panel" aria-labelledby="app-title">
+        <div className="panel-intro">
+          <p className="eyebrow">Warsaw environmental map</p>
+          <h1 id="app-title">Explore a greener Warsaw</h1>
+          <p>
+            Compare air-quality readings with the city&apos;s public tree inventory
+            in one interactive view.
+          </p>
         </div>
-      </div>
-    </div>
-  );
-};
 
-export default Banner;
+        <button
+          className="locate-button"
+          type="button"
+          onClick={onLocate}
+          disabled={isLocating}
+        >
+          <FaLocationArrow aria-hidden="true" />
+          {isLocating ? 'Finding your location...' : 'Use my location'}
+        </button>
+
+        <p
+          className={`location-message location-message--${locationState.status}`}
+          role="status"
+          aria-live="polite"
+        >
+          {locationState.message}
+        </p>
+
+        <section className="layer-guide" aria-labelledby="layer-guide-title">
+          <div className="section-heading">
+            <h2 id="layer-guide-title">Map layers</h2>
+            <span>Choose overlays</span>
+          </div>
+          <ul>
+            <li>
+              <label className="layer-row">
+                <span className="layer-icon layer-icon--air" aria-hidden="true">
+                  <MdAir />
+                </span>
+                <span className="layer-copy">
+                  <strong>Air quality</strong>
+                  <small>91 monitoring stations</small>
+                </span>
+                <input
+                  className="layer-toggle"
+                  type="checkbox"
+                  checked={activeLayers.air}
+                  onChange={() => onToggleLayer('air')}
+                  aria-label="Show air-quality stations"
+                />
+              </label>
+            </li>
+            <li>
+              <label className="layer-row">
+                <span className="layer-icon layer-icon--trees" aria-hidden="true">
+                  <FaTree />
+                </span>
+                <span className="layer-copy">
+                  <strong>Tree inventory</strong>
+                  <small>10,000 public records</small>
+                </span>
+                <input
+                  className="layer-toggle"
+                  type="checkbox"
+                  checked={activeLayers.trees}
+                  onChange={() => onToggleLayer('trees')}
+                  aria-label="Show tree inventory"
+                />
+              </label>
+            </li>
+          </ul>
+        </section>
+
+        <section className="air-legend" aria-labelledby="air-legend-title">
+          <h2 id="air-legend-title">Air-quality status</h2>
+          <div className="legend-items">
+            <span><i className="quality-dot quality-dot--good" />Good</span>
+            <span><i className="quality-dot quality-dot--moderate" />Moderate</span>
+            <span><i className="quality-dot quality-dot--poor" />Poor</span>
+          </div>
+        </section>
+
+        <p className="data-note">
+          Air readings are a bundled snapshot from 23 November 2024, not live data.
+        </p>
+      </aside>
+    </>
+  )
+}
+
+export default Banner
