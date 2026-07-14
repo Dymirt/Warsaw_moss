@@ -507,7 +507,7 @@ function selectRouteGreenery(points, route) {
   return { points: nearby.filter((_, index) => index % stride === 0), counts }
 }
 
-async function buildGreenRoute({ from: fromQuery, to: toQuery, mode }) {
+export async function buildGreenRoute({ from: fromQuery, to: toQuery, mode }) {
   if (typeof fromQuery !== 'string' || typeof toQuery !== 'string') {
     throw new ApiError('Enter a starting point and destination.', 400)
   }
@@ -593,7 +593,7 @@ async function buildGreenRoute({ from: fromQuery, to: toQuery, mode }) {
   }
 }
 
-async function getAirQuality(apiToken) {
+export async function getAirQuality(apiToken) {
   if (!apiToken) {
     throw new ApiError('WARSAW_API_TOKEN is not configured on the server.', 503)
   }
@@ -612,6 +612,17 @@ async function getAirQuality(apiToken) {
       fetchedAt: new Date().toISOString(),
     }
   })
+}
+
+export function formatApiError(error) {
+  const isKnownError = error instanceof ApiError
+
+  if (!isKnownError) console.error(error)
+
+  return {
+    status: isKnownError ? error.status : 500,
+    message: isKnownError ? error.message : 'An unexpected server error occurred.',
+  }
 }
 
 function readJsonBody(request) {
@@ -675,10 +686,7 @@ function createApiMiddleware(apiToken) {
 
       sendJson(response, 404, { error: 'API route not found.' })
     } catch (error) {
-      const status = error instanceof ApiError ? error.status : 500
-      const message =
-        error instanceof ApiError ? error.message : 'An unexpected server error occurred.'
-      if (!(error instanceof ApiError)) console.error(error)
+      const { status, message } = formatApiError(error)
       sendJson(response, status, { error: message })
     }
   }

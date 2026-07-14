@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 import Map from './maps/Map.jsx'
 import Banner from './banner/Banner.jsx'
 import { requestJson } from './api.js'
@@ -132,6 +133,7 @@ function App() {
         routeResult={routeState.result}
         userPosition={userPosition}
       />
+      <SpeedInsights />
     </main>
   )
 }

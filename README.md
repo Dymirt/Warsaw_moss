@@ -17,6 +17,7 @@ data snapshots or exposes the Warsaw API token in browser code.
 - Display the selected route, alternatives, environmental points, and endpoints
 - Load token-protected Warsaw air-quality readings in real time
 - Keep the Warsaw API token in a server-only environment variable
+- Deploy the frontend and Node API together on Vercel
 - Cache upstream responses to reduce load and improve repeat requests
 - Responsive Leaflet interface with accessible controls and status messages
 
@@ -35,8 +36,9 @@ flowchart LR
 ```
 
 The browser calls only `/api/air` and `/api/route`. Vite mounts the server middleware
-from `server/ecoApi.js` in development and preview mode. The middleware adds the
-private token only when calling the Warsaw air-sensor endpoint.
+from `server/ecoApi.js` in development and preview mode. On Vercel, the files in
+`api/` expose the same shared logic as Node functions. Both adapters add the private
+token only when calling the Warsaw air-sensor endpoint.
 
 For a route request, the server:
 
@@ -151,6 +153,10 @@ configured. It never returns the token itself.
 
 ```text
 .
+├── api/                       # Vercel Function entrypoints
+│   ├── air.js
+│   ├── health.js
+│   └── route.js
 ├── public/
 │   └── eco-navigate.svg
 ├── server/
@@ -161,21 +167,43 @@ configured. It never returns the token itself.
 │   ├── App.jsx                # Client data and interaction state
 │   └── main.jsx               # React entry point
 ├── .env.example
+├── .vercelignore
 ├── eslint.config.js
 ├── package.json
-└── vite.config.js             # Mounts the same-origin API middleware
+├── vercel.json                # Vercel build and function-duration settings
+└── vite.config.js             # Mounts the local same-origin API middleware
 ```
 
 There is intentionally no `src/data` snapshot directory. Environmental records
 come from live upstream requests.
 
+## Deploy to Vercel
+
+The repository is configured as a Vite frontend with three Node-based Vercel
+Functions. Import the GitHub repository into Vercel and keep the detected Vite
+framework preset, `npm run build` command, and `dist` output directory.
+
+In **Project Settings → Environment Variables**, add:
+
+```text
+WARSAW_API_TOKEN=<your Warsaw API token>
+```
+
+Enable it for Production and Preview, then redeploy. Do not upload `.env.local`;
+`.vercelignore` explicitly excludes local environment files. `vercel.json` allows
+up to 120 seconds for green-route calculation and shorter durations for the air and
+health functions.
+
+The route and greenery caches are held in function memory. They improve warm
+requests but are not guaranteed to survive a serverless restart or be shared across
+instances.
+
 ## Production notes
 
 `npm run preview` is for local validation, not a production web server. A static
 host can serve `dist/`, but it cannot safely hold the Warsaw API token or execute
-the `/api/*` routes. For production, deploy the same server logic to a Node-capable
-runtime or adapt the two endpoints to serverless functions, then serve the browser
-build from the same origin.
+the `/api/*` routes. Deploy the included Vercel Functions or use another Node-capable
+runtime, then serve the browser build and API from the same origin.
 
 If the interface reports that the Eco Navigate API is not running, the frontend is
 being served without those `/api/*` routes. For local use, stop that static server
