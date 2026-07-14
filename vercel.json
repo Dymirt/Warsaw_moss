@@ -3,16 +3,5 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "fluid": true,
-  "functions": {
-    "api/air.js": {
-      "maxDuration": 30
-    },
-    "api/health.js": {
-      "maxDuration": 10
-    },
-    "api/route.js": {
-      "maxDuration": 120
-    }
-  }
+  "fluid": true
 }
