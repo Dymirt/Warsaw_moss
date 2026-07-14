@@ -194,7 +194,8 @@ Enable it for Production and Preview, then redeploy. Do not upload `.env.local`;
 Fluid Compute explicitly, including for Vercel projects created before it became
 the default. Function duration is left at Vercel's plan-supported default instead
 of being hard-coded; the current Fluid Compute default is 300 seconds on Hobby,
-Pro, and Enterprise plans.
+Pro, and Enterprise plans. Functions run in Vercel's Frankfurt (`fra1`) region so
+the Warsaw API calls stay in Europe and avoid unnecessary transatlantic latency.
 
 The route and greenery caches are held in function memory. They improve warm
 requests but are not guaranteed to survive a serverless restart or be shared across
