@@ -14,7 +14,9 @@ requests, private Warsaw token, and persistent caches live in the separate
 - Build a route from the browser's current location to one selected destination.
 - Compare real pedestrian and bicycle alternatives.
 - Display the green score and detour for every route.
-- Show nearby environmental inventory records and live air stations.
+- Show route-specific environmental inventory records for every alternative.
+- Discover greenery across districts along longer Warsaw routes.
+- Display live air-quality stations.
 - Center the map on the user's location with explicit browser permission.
 - Deploy as a static Vite application on Vercel; no Vercel Function is required.
 

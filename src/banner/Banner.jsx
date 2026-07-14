@@ -39,6 +39,8 @@ const Banner = ({
   )
   const recommendedRouteId = result?.recommendedRouteId ?? result?.selectedRouteId
   const isRecommendedRoute = selectedRoute?.id === recommendedRouteId
+  const selectedGreenery = selectedRoute?.greenery ?? result?.greenery ?? []
+  const selectedEcoCounts = selectedRoute?.ecoCounts ?? result?.ecoCounts
 
   function submitRoute(event) {
     event.preventDefault()
@@ -95,15 +97,9 @@ const Banner = ({
               <span><strong>+{selectedRoute.detourPercent}%</strong>detour</span>
             </div>
             <p className="eco-counts">
-              {isRecommendedRoute ? (
-                <>
-                  Near the route: {result.ecoCounts.tree.toLocaleString()} trees,{' '}
-                  {result.ecoCounts.shrub.toLocaleString()} shrubs, and{' '}
-                  {result.ecoCounts.forest.toLocaleString()} forest records.
-                </>
-              ) : (
-                'Select Best green to show its detailed greenery points again.'
-              )}
+              Near this route: {selectedEcoCounts.tree.toLocaleString()} trees,{' '}
+              {selectedEcoCounts.shrub.toLocaleString()} shrubs, and{' '}
+              {selectedEcoCounts.forest.toLocaleString()} forest records.
             </p>
             <div className="route-options" aria-label="Compared route alternatives">
               {result.routes.map((route, index) => {
@@ -246,9 +242,7 @@ const Banner = ({
                   <strong>Route greenery</strong>
                   <small>
                     {result
-                      ? isRecommendedRoute
-                        ? `${result.greenery.length} nearby map points`
-                        : 'Available on the Best green route'
+                      ? `${selectedGreenery.length} nearby map points`
                       : 'Appears after routing'}
                   </small>
                 </span>

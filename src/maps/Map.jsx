@@ -225,10 +225,10 @@ function RouteEndpoints({ result }) {
 }
 
 function Map({ activeLayers, airStations, routeResult, userPosition }) {
-  const recommendedRouteId =
-    routeResult?.recommendedRouteId ?? routeResult?.selectedRouteId
-  const isRecommendedRoute =
-    routeResult?.selectedRouteId === recommendedRouteId
+  const selectedRoute = routeResult?.routes.find(
+    ({ id }) => id === routeResult.selectedRouteId,
+  )
+  const selectedGreenery = selectedRoute?.greenery ?? routeResult?.greenery ?? []
 
   return (
     <section id="map" className="map-shell" aria-label="Interactive map of Warsaw">
@@ -254,9 +254,9 @@ function Map({ activeLayers, airStations, routeResult, userPosition }) {
 
         <RouteLines result={routeResult} />
 
-        {activeLayers.greenery && routeResult && isRecommendedRoute && (
+        {activeLayers.greenery && routeResult && (
           <LayerGroup>
-            <GreeneryPoints points={routeResult.greenery} />
+            <GreeneryPoints points={selectedGreenery} />
           </LayerGroup>
         )}
 
