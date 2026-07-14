@@ -3,6 +3,12 @@ const NOMINATIM_API = 'https://nominatim.openstreetmap.org'
 const VALHALLA_API = 'https://valhalla1.openstreetmap.de/route'
 const PROJECT_USER_AGENT =
   'EcoNavigate/0.2 (https://github.com/Dymirt/Warsaw_moss)'
+const WARSAW_REQUEST_OPTIONS = {
+  headers: {
+    Accept: 'application/json',
+    'User-Agent': PROJECT_USER_AGENT,
+  },
+}
 
 const WARSAW_VIEWBOX = '20.8517,52.3681,21.2712,52.0978'
 const CACHE_TTL = {
@@ -306,7 +312,11 @@ async function fetchGreeneryResource(type, district) {
       limit: '50000',
     })
 
-    const payload = await fetchJson(url, {}, 'Warsaw greenery data')
+    const payload = await fetchJson(
+      url,
+      WARSAW_REQUEST_OPTIONS,
+      'Warsaw greenery data',
+    )
     const records = payload.result?.records
 
     if (!Array.isArray(records)) {
@@ -601,7 +611,11 @@ export async function getAirQuality(apiToken) {
   return cached('air-quality', CACHE_TTL.air, async () => {
     const url = new URL(`${WARSAW_API}/air_sensors_get/`)
     url.searchParams.set('apikey', apiToken)
-    const payload = await fetchJson(url, {}, 'Warsaw air-quality service')
+    const payload = await fetchJson(
+      url,
+      WARSAW_REQUEST_OPTIONS,
+      'Warsaw air-quality service',
+    )
 
     if (!Array.isArray(payload.result)) {
       throw new ApiError('Warsaw air-quality data had an unexpected format.', 502)
