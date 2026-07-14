@@ -1,5 +1,9 @@
 const API_UNAVAILABLE_MESSAGE =
-  'Eco Navigate API is not running. Start the project with npm run dev, or use npm run preview after npm run build.'
+  'Eco Navigate API is unavailable. Check VITE_API_BASE_URL and make sure the FastAPI service is running.'
+
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '')
+  .trim()
+  .replace(/\/+$/, '')
 
 export async function requestJson(path, options = {}) {
   if (!['http:', 'https:'].includes(window.location.protocol)) {
@@ -9,7 +13,7 @@ export async function requestJson(path, options = {}) {
   let response
 
   try {
-    response = await fetch(path, options)
+    response = await fetch(`${API_BASE_URL}${path}`, options)
   } catch (error) {
     if (error.name === 'AbortError') throw error
     throw new Error(API_UNAVAILABLE_MESSAGE, { cause: error })

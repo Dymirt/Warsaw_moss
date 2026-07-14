@@ -1,135 +1,106 @@
 # Eco Navigate
 
-Eco Navigate builds walking and cycling routes through Warsaw, then recommends the
-alternative with the strongest nearby greenery without ignoring unreasonable
-detours. The score uses current City of Warsaw inventories for trees, shrubs, and
-forest areas. Live air-quality stations can be displayed alongside the route.
+Eco Navigate compares walking and cycling routes through Warsaw and recommends the
+alternative with stronger nearby greenery without accepting an unreasonable detour.
+The map shows route alternatives, trees, shrubs, forest inventory points, and live
+air-quality stations.
 
-This repository is a working full-stack prototype. It no longer ships environmental
-data snapshots or exposes the Warsaw API token in browser code.
+This repository is the React and Leaflet frontend. The API, route scoring, upstream
+requests, private Warsaw token, and persistent caches live in the separate
+[Eco Navigate FastAPI repository](https://github.com/Dymirt/econavigate_FastApi).
 
 ## Features
 
-- Search for a start and destination inside Warsaw
-- Compare real pedestrian or bicycle route alternatives
-- Score each route against live tree, shrub, and forest records
-- Balance green exposure against added route distance
-- Display the selected route, alternatives, environmental points, and endpoints
-- Load token-protected Warsaw air-quality readings in real time
-- Keep the Warsaw API token in a server-only environment variable
-- Deploy the frontend and Node API together on Vercel
-- Cache upstream responses to reduce load and improve repeat requests
-- Responsive Leaflet interface with accessible controls and status messages
+- Search for a start and destination in Warsaw.
+- Compare real pedestrian and bicycle alternatives.
+- Display the green score and detour for every route.
+- Show nearby environmental inventory records and live air stations.
+- Center the map on the user's location with explicit browser permission.
+- Deploy as a static Vite application on Vercel; no Vercel Function is required.
 
-## How it works
+## Architecture
 
 ```mermaid
 flowchart LR
-    Browser["React + Leaflet browser"] --> API["Same-origin server API"]
-    API --> Air["Warsaw live air sensors"]
-    API --> Geo["Nominatim geocoding"]
-    API --> Routes["Valhalla route alternatives"]
+    Browser["React + Leaflet on Vercel"] --> API["FastAPI on your server"]
+    API --> Air["Warsaw air sensors"]
     API --> Green["Warsaw greenery inventories"]
+    API --> Geo["Nominatim geocoding"]
+    API --> Routes["Valhalla routing"]
     Routes --> Score["Green-route scorer"]
     Green --> Score
     Score --> Browser
 ```
 
-The browser calls only `/api/air` and `/api/route`. Vite mounts the server middleware
-from `server/ecoApi.js` in development and preview mode. On Vercel, the files in
-`api/` expose the same shared logic as Node functions. Both adapters add the private
-token only when calling the Warsaw air-sensor endpoint.
+The browser calls `GET /api/air` and `POST /api/route` on the origin configured by
+`VITE_API_BASE_URL`. It never receives the Warsaw API token. The FastAPI backend
+keeps that token in its server-side `.env.local` file and caches slow-changing
+greenery inventories on persistent storage.
 
-For a route request, the server:
-
-1. Geocodes both place names within Warsaw.
-2. Requests pedestrian or bicycle alternatives from Valhalla.
-3. Identifies the Warsaw districts for the endpoints and route midpoint.
-4. Fetches live tree, shrub, and forest records for those districts.
-5. Samples each alternative about every 55 metres and measures nearby greenery.
-6. Applies a detour penalty and returns the highest-ranked alternative.
-
-The displayed `0–100` green score is a transparent heuristic, not a City of Warsaw
-rating. Trees carry 55% of the local sample weight, shrubs 20%, and forest records
-25%. The final ranking subtracts a penalty for distance above the shortest returned
-alternative.
-
-## Data and services
-
-| Purpose | Source | Notes |
-| --- | --- | --- |
-| Air quality | [Warsaw Open Data API](https://api.um.warszawa.pl/) | Token required; provider refreshes readings approximately every 10 minutes |
-| Individual trees | Warsaw resource `ed6217dd-c8d0-4f7b-8bed-3b7eb81a95ba` | Live datastore records |
-| Individual shrubs | Warsaw resource `0b1af81f-247d-4266-9823-693858ad5b5d` | Live datastore records |
-| Forest areas | Warsaw resource `75bedfd5-6c83-426b-9ae5-f03651857a48` | Live forest inventory points |
-| Address search | [Nominatim Search API](https://nominatim.org/release-docs/latest/api/Search/) | Restricted to the Warsaw view box |
-| Route alternatives | [Valhalla route API](https://valhalla.github.io/valhalla/api/turn-by-turn/api-reference/) | Pedestrian and bicycle costing |
-| Basemap | [OpenStreetMap](https://www.openstreetmap.org/copyright) | Standard Leaflet tile layer |
-
-Nominatim requests are serialized to one request per second, identify this project
-with a custom user agent, and are cached. This follows the public service's
-[usage policy](https://operations.osmfoundation.org/policies/nominatim/). The public
-Valhalla instance is suitable for a prototype; a production deployment should use
-a service with an explicit SLA or a self-hosted instance.
-
-## Getting started
+## Local development
 
 ### Requirements
 
-- Node.js 18 or newer
-- npm
-- A Warsaw Open Data API token from [api.um.warszawa.pl](https://api.um.warszawa.pl/)
-- Internet access for the live APIs and map tiles
+- Node.js 18 or newer and npm.
+- A running copy of
+  [econavigate_FastApi](https://github.com/Dymirt/econavigate_FastApi), normally on
+  `http://127.0.0.1:8000`.
 
-### Install
+### Start the frontend
 
 ```bash
 git clone https://github.com/Dymirt/Warsaw_moss.git
 cd Warsaw_moss
 npm install
 cp .env.example .env.local
-```
-
-Set your token in `.env.local`:
-
-```dotenv
-WARSAW_API_TOKEN=your-real-token
-```
-
-Do not prefix this variable with `VITE_`. Vite exposes `VITE_*` values to browser
-code; this token must remain server-side. `.env.local` is ignored by Git.
-
-Start the app:
-
-```bash
 npm run dev
 ```
 
-Open the URL printed by Vite, normally `http://localhost:5173`.
+The default local configuration is:
 
-Do not open `dist/index.html` directly or serve `dist/` with a static-only server.
-The browser needs the same-origin `/api/*` middleware to geocode places, calculate
-routes, and keep the Warsaw token private.
+```dotenv
+VITE_API_BASE_URL=http://127.0.0.1:8000
+```
 
-## Available scripts
+Open the URL printed by Vite, normally <http://localhost:5173>. The backend must
+allow this origin through its `CORS_ORIGINS` setting.
+
+`VITE_API_BASE_URL` is public configuration included in the browser bundle. Never
+put `WARSAW_API_TOKEN` or another secret in this repository, in Vercel, or in any
+variable prefixed with `VITE_`.
+
+## Scripts
 
 | Command | Purpose |
 | --- | --- |
-| `npm run dev` | Start the React app and same-origin API middleware with hot reload |
-| `npm run build` | Build the browser application into `dist/` |
-| `npm run preview` | Preview the build with the local API middleware |
-| `npm run lint` | Run ESLint over client, server, and configuration files |
+| `npm run dev` | Run the Vite development server with hot reload. |
+| `npm run build` | Build the static production application into `dist/`. |
+| `npm run preview` | Preview the static production build. |
+| `npm run lint` | Run ESLint over the frontend source and configuration. |
 
-## API routes
+## Deploy the frontend to Vercel
 
-### `GET /api/air`
+1. Deploy the FastAPI repository on a server with an HTTPS domain, for example
+   `https://api.eco-navigate.example`.
+2. Add the production frontend origin, such as
+   `https://warsaw-moss.vercel.app`, to the backend's `CORS_ORIGINS`.
+3. Import this repository into Vercel with the Vite preset.
+4. Add this Vercel environment variable for Production and Preview:
 
-Returns current Warsaw air stations through the token-protected upstream endpoint.
-Responses are cached in server memory for five minutes.
+   ```text
+   VITE_API_BASE_URL=https://api.eco-navigate.example
+   ```
+
+5. Redeploy and verify the browser's requests to `/api/health`, `/api/air`, and
+   `/api/route` in its network panel.
+
+The frontend is fully static, so Vercel Function duration and egress limits no
+longer apply. Both sites must use HTTPS in production or the browser will block the
+API request as mixed content.
+
+## API contract
 
 ### `POST /api/route`
-
-Request:
 
 ```json
 {
@@ -139,106 +110,54 @@ Request:
 }
 ```
 
-`mode` accepts `walking` or `cycling`. The response includes resolved places,
-candidate GeoJSON lines, the selected route ID, green scores, detour percentages,
-nearby environmental points, aggregate record counts, and any partial-data
-warnings. Greenery responses are cached per district for one hour.
+`mode` accepts `walking` or `cycling`. The response includes the resolved places,
+candidate GeoJSON lines, selected route ID, green scores, detour percentages,
+nearby environmental points, aggregate counts, warnings, and calculation time.
+
+### `GET /api/air`
+
+Returns the current Warsaw air stations and their fetch timestamp.
 
 ### `GET /api/health`
 
-Reports whether the local server is running and whether a Warsaw token is
-configured. It never returns the token itself.
+Reports backend readiness, whether its Warsaw token is configured, and
+non-sensitive cache statistics.
+
+See the backend's `/docs` page for the generated OpenAPI interface.
 
 ## Project structure
 
 ```text
 .
-├── api/                       # Vercel Function entrypoints
-│   ├── air.js
-│   ├── health.js
-│   └── route.js
-├── public/
-│   └── eco-navigate.svg
-├── server/
-│   └── ecoApi.js              # API proxy, caches, routing, and scoring
+├── public/                    # Static brand assets
 ├── src/
-│   ├── banner/                # Route form, results, and layer controls
+│   ├── banner/                # Search form, route results, and layer controls
 │   ├── maps/                  # Leaflet routes, stations, and greenery
+│   ├── api.js                 # FastAPI client and error handling
 │   ├── App.jsx                # Client data and interaction state
 │   └── main.jsx               # React entry point
-├── .env.example
-├── .vercelignore
-├── eslint.config.js
+├── .env.example               # Public API-origin example only
 ├── package.json
-├── vercel.json                # Vercel build and Fluid Compute settings
-└── vite.config.js             # Mounts the local same-origin API middleware
+├── vercel.json                # Static Vite deployment
+└── vite.config.js
 ```
 
-There is intentionally no `src/data` snapshot directory. Environmental records
-come from live upstream requests.
+There are intentionally no API handlers, environmental data snapshots, server
+middleware, or secrets in this frontend repository.
 
-## Deploy to Vercel
+## Data sources and limitations
 
-The repository is configured as a Vite frontend with three Node-based Vercel
-Functions. Import the GitHub repository into Vercel and keep the detected Vite
-framework preset, `npm run build` command, and `dist` output directory.
+The backend combines the
+[Warsaw Open Data API](https://api.um.warszawa.pl/),
+[Nominatim](https://nominatim.org/),
+[Valhalla](https://valhalla.github.io/valhalla/), and
+[OpenStreetMap](https://www.openstreetmap.org/copyright).
 
-In **Project Settings → Environment Variables**, add:
-
-```text
-WARSAW_API_TOKEN=<your Warsaw API token>
-```
-
-Enable it for Production and Preview, then redeploy. Do not upload `.env.local`;
-`.vercelignore` explicitly excludes local environment files. `vercel.json` enables
-Fluid Compute explicitly, including for Vercel projects created before it became
-the default. Function duration is left at Vercel's plan-supported default instead
-of being hard-coded; the current Fluid Compute default is 300 seconds on Hobby,
-Pro, and Enterprise plans. Functions run in Vercel's Frankfurt (`fra1`) region so
-the Warsaw API calls stay in Europe and avoid unnecessary transatlantic latency.
-
-During production verification on July 14, 2026, the City of Warsaw API accepted
-local requests but did not accept outbound connections from either Vercel's Node or
-Edge function networks. The Vercel deployment therefore serves the frontend and
-route alternatives, but live air readings and greenery scoring require an external
-relay/backend with reachable egress, or an egress address that the city has
-allowlisted. This is an upstream network restriction rather than a Vercel build or
-function-duration issue.
-
-The route and greenery caches are held in function memory. They improve warm
-requests but are not guaranteed to survive a serverless restart or be shared across
-instances.
-
-## Production notes
-
-`npm run preview` is for local validation, not a production web server. A static
-host can serve `dist/`, but it cannot safely hold the Warsaw API token or execute
-the `/api/*` routes. Deploy the included Vercel Functions or use another Node-capable
-runtime, then serve the browser build and API from the same origin.
-
-If the interface reports that the Eco Navigate API is not running, the frontend is
-being served without those `/api/*` routes. For local use, stop that static server
-and use `npm run dev`, or run `npm run build` followed by `npm run preview`.
-
-Recommended production work:
-
-- Replace the public Valhalla endpoint with a contracted or self-hosted service.
-- Move in-memory caches to a shared cache when running multiple server instances.
-- Add request rate limiting, monitoring, and automated route-scoring tests.
-- Add Warsaw district geometry for more exact cross-district inventory queries.
-- Add park and lawn polygons when a reliable live municipal source is available.
-
-## Limitations
-
-- The green score measures proximity to inventory records; it does not measure
-  shade, sidewalk quality, safety, accessibility, noise, or current construction.
-- Warsaw's forest resource is represented by inventory points, not a rendered
-  canopy polygon. Grass and lawn data are not currently available in the selected
-  municipal resources.
-- The first route through a district can take longer while live inventories load;
-  subsequent requests use the server cache.
-- Air-quality readings are informational and should not replace official health
-  guidance.
+The green score is a route-ranking heuristic, not an official City of Warsaw rating.
+It measures proximity to available inventory records and does not measure shade,
+sidewalk quality, safety, accessibility, noise, temporary closures, or construction.
+Grass and lawn polygons are not included until a suitable live municipal dataset is
+available.
 
 ## Authors
 
