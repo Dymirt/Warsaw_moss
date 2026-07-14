@@ -14,7 +14,7 @@ requests, private Warsaw token, and persistent caches live in the separate
 - Build a route from the browser's current location to one selected destination.
 - Compare real pedestrian and bicycle alternatives.
 - Display the green score and detour for every route.
-- Show route-specific environmental inventory records for every alternative.
+- Show every environmental inventory record within 5 metres of each alternative.
 - Discover greenery across districts along longer Warsaw routes.
 - Display live air-quality stations.
 - Center the map on the user's location with explicit browser permission.

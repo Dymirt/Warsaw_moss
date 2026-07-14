@@ -65,8 +65,8 @@ const Banner = ({
           <p className="eyebrow">Green routing for Warsaw</p>
           <h1 id="app-title">Take the greener way</h1>
           <p>
-            Compare real walking and cycling alternatives by nearby trees, shrubs,
-            and forest areas.
+            Compare real walking and cycling alternatives by trees, shrubs, and
+            forest records within 5 metres of each route.
           </p>
         </div>
 
@@ -97,7 +97,7 @@ const Banner = ({
               <span><strong>+{selectedRoute.detourPercent}%</strong>detour</span>
             </div>
             <p className="eco-counts">
-              Near this route: {selectedEcoCounts.tree.toLocaleString()} trees,{' '}
+              Within 5 m: {selectedEcoCounts.tree.toLocaleString()} trees,{' '}
               {selectedEcoCounts.shrub.toLocaleString()} shrubs, and{' '}
               {selectedEcoCounts.forest.toLocaleString()} forest records.
             </p>
@@ -242,7 +242,7 @@ const Banner = ({
                   <strong>Route greenery</strong>
                   <small>
                     {result
-                      ? `${selectedGreenery.length} nearby map points`
+                      ? `${selectedGreenery.length} points within 5 m`
                       : 'Appears after routing'}
                   </small>
                 </span>
