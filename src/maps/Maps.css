@@ -15,6 +15,11 @@
 }
 
 .leaflet-control-zoom {
+  margin-top: 24px !important;
+  margin-right: 24px !important;
+}
+
+.leaflet-control-zoom {
   overflow: hidden;
   border: 1px solid rgba(23, 35, 29, 0.12) !important;
   border-radius: 12px !important;
@@ -88,4 +93,11 @@
   overflow-wrap: anywhere;
   color: #34443b;
   font-weight: 650;
+}
+
+@media (max-width: 720px) {
+  .leaflet-control-zoom {
+    margin-top: 76px !important;
+    margin-right: 12px !important;
+  }
 }

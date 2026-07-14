@@ -1,15 +1,14 @@
-import { useEffect, useState } from 'react'
-import L from 'leaflet'
+import { useEffect } from 'react'
 import {
   CircleMarker,
-  GeoJSON,
   LayerGroup,
   MapContainer,
+  Polyline,
   Popup,
   TileLayer,
+  Tooltip,
   useMap,
 } from 'react-leaflet'
-import airQualityData from '../data/air-quality.json'
 import './Maps.css'
 
 const WARSAW_CENTER = [52.2298, 21.0118]
@@ -23,22 +22,6 @@ const qualityLabels = {
   zły: 'Poor',
   'bardzo zły': 'Very poor',
 }
-
-function toTreeGeoJson(treeData) {
-  return {
-    type: 'FeatureCollection',
-    features: treeData.records.map(
-      ([id, longitude, latitude, species, district, address, health]) => ({
-        type: 'Feature',
-        id,
-        geometry: { type: 'Point', coordinates: [longitude, latitude] },
-        properties: { species, district, address, health },
-      }),
-    ),
-  }
-}
-
-const treeRenderer = L.canvas({ padding: 0.5 })
 
 function getQualityColor(label = '') {
   const normalized = label.toLocaleLowerCase('pl')
@@ -57,49 +40,12 @@ function translateQuality(label = '') {
   return qualityLabels[label.toLocaleLowerCase('pl')] ?? label ?? 'Unknown'
 }
 
-function getPrimaryReading(readings) {
+function getPrimaryReading(readings = []) {
   return (
     readings.find(({ param_code: code }) => code === 'PM25' || code === 'PM2.5') ??
     readings.find(({ param_code: code }) => code === 'PM10') ??
     readings[0]
   )
-}
-
-function escapeHtml(value) {
-  return String(value ?? 'Not recorded')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;')
-}
-
-function makeTreeMarker(_feature, latlng) {
-  return L.circleMarker(latlng, {
-    renderer: treeRenderer,
-    radius: 2.4,
-    color: '#18683c',
-    fillColor: '#35a45f',
-    fillOpacity: 0.72,
-    opacity: 0.45,
-    weight: 0.6,
-  })
-}
-
-function bindTreePopup(feature, layer) {
-  const { species, district, address, health } = feature.properties
-
-  layer.bindPopup(`
-    <article class="map-popup">
-      <p class="map-popup__eyebrow">Tree inventory</p>
-      <strong>${escapeHtml(species)}</strong>
-      <dl>
-        <div><dt>District</dt><dd>${escapeHtml(district)}</dd></div>
-        <div><dt>Location</dt><dd>${escapeHtml(address)}</dd></div>
-        <div><dt>Health</dt><dd>${escapeHtml(health)}</dd></div>
-      </dl>
-    </article>
-  `)
 }
 
 function RecenterMap({ position }) {
@@ -114,15 +60,32 @@ function RecenterMap({ position }) {
   return null
 }
 
-function AirQualityStations() {
-  return airQualityData.result.map((record) => {
+function FitRoute({ result }) {
+  const map = useMap()
+
+  useEffect(() => {
+    const route = result?.routes.find(({ id }) => id === result.selectedRouteId)
+    if (!route) return
+
+    map.fitBounds(
+      route.geometry.coordinates.map(([longitude, latitude]) => [latitude, longitude]),
+      { padding: [48, 48], maxZoom: 16 },
+    )
+  }, [map, result])
+
+  return null
+}
+
+function AirQualityStations({ stations }) {
+  return stations.map((record) => {
     const reading = getPrimaryReading(record.data)
     const quality = reading?.ijp?.name ?? record.ijp?.name ?? 'Unknown'
     const color = getQualityColor(quality)
+    const readingValue = Number(reading?.value)
 
     return (
       <CircleMarker
-        key={`${record.name}-${record.lat}-${record.lon}`}
+        key={record.id ?? `${record.name}-${record.lat}-${record.lon}`}
         center={[record.lat, record.lon]}
         radius={9}
         pathOptions={{
@@ -144,7 +107,9 @@ function AirQualityStations() {
               <div>
                 <dt>{reading?.param_code ?? 'Reading'}</dt>
                 <dd>
-                  {reading ? `${reading.value.toFixed(1)} ${reading.unit}` : 'Not available'}
+                  {Number.isFinite(readingValue)
+                    ? `${readingValue.toFixed(1)} ${reading.unit}`
+                    : 'Not available'}
                 </dd>
               </div>
               <div>
@@ -167,35 +132,92 @@ function AirQualityStations() {
   })
 }
 
-function TreeInventory() {
-  const [treeGeoJson, setTreeGeoJson] = useState(null)
+function RouteLines({ result }) {
+  if (!result) return null
 
-  useEffect(() => {
-    let isMounted = true
-
-    import('../data/trees.json').then(({ default: data }) => {
-      if (isMounted) {
-        setTreeGeoJson(toTreeGeoJson(data))
-      }
-    })
-
-    return () => {
-      isMounted = false
-    }
-  }, [])
-
-  if (!treeGeoJson) return null
-
-  return (
-    <GeoJSON
-      data={treeGeoJson}
-      pointToLayer={makeTreeMarker}
-      onEachFeature={bindTreePopup}
-    />
+  const orderedRoutes = [...result.routes].sort(
+    (first) => (first.id === result.selectedRouteId ? 1 : -1),
   )
+
+  return orderedRoutes.map((route) => {
+    const isSelected = route.id === result.selectedRouteId
+    return (
+      <Polyline
+        key={route.id}
+        positions={route.geometry.coordinates.map(([lon, lat]) => [lat, lon])}
+        pathOptions={{
+          color: isSelected ? '#16764a' : '#53675c',
+          opacity: isSelected ? 0.96 : 0.38,
+          weight: isSelected ? 7 : 4,
+          dashArray: isSelected ? undefined : '8 10',
+        }}
+      >
+        <Tooltip sticky>
+          {isSelected ? 'Greener route' : 'Alternative'} ·{' '}
+          {route.greenScore ?? '—'}/100 green
+        </Tooltip>
+      </Polyline>
+    )
+  })
 }
 
-function Map({ activeLayers, userPosition }) {
+function GreeneryPoints({ points }) {
+  const styles = {
+    tree: { color: '#17653d', fillColor: '#36a765', radius: 3 },
+    shrub: { color: '#647c2e', fillColor: '#a9c85e', radius: 3.5 },
+    forest: { color: '#0d5035', fillColor: '#16764a', radius: 4 },
+  }
+
+  return points.map((point) => {
+    const style = styles[point.type]
+    return (
+      <CircleMarker
+        key={point.id}
+        center={[point.lat, point.lon]}
+        radius={style.radius}
+        pathOptions={{
+          color: style.color,
+          fillColor: style.fillColor,
+          fillOpacity: 0.78,
+          opacity: 0.55,
+          weight: 0.7,
+        }}
+      >
+        <Popup>
+          <article className="map-popup">
+            <p className="map-popup__eyebrow">{point.type} record</p>
+            <strong>{point.name}</strong>
+            <dl>
+              <div><dt>District</dt><dd>{point.district}</dd></div>
+              <div><dt>Detail</dt><dd>{point.detail || 'Not recorded'}</dd></div>
+              <div><dt>Source</dt><dd>Warsaw Open Data</dd></div>
+            </dl>
+          </article>
+        </Popup>
+      </CircleMarker>
+    )
+  })
+}
+
+function RouteEndpoints({ result }) {
+  if (!result) return null
+
+  return [
+    { key: 'from', place: result.from, label: 'Start', color: '#17231d' },
+    { key: 'to', place: result.to, label: 'Destination', color: '#f25f45' },
+  ].map(({ key, place, label, color }) => (
+    <CircleMarker
+      key={key}
+      center={[place.lat, place.lon]}
+      radius={8}
+      pathOptions={{ color: '#fff', fillColor: color, fillOpacity: 1, weight: 3 }}
+    >
+      <Popup><strong>{label}</strong><br />{place.label}</Popup>
+    </CircleMarker>
+  ))
+}
+
+function Map({ activeLayers, airStations, routeResult, userPosition }) {
   return (
     <section id="map" className="map-shell" aria-label="Interactive map of Warsaw">
       <MapContainer
@@ -214,11 +236,19 @@ function Map({ activeLayers, userPosition }) {
 
         {activeLayers.air && (
           <LayerGroup>
-            <AirQualityStations />
+            <AirQualityStations stations={airStations} />
           </LayerGroup>
         )}
 
-        {activeLayers.trees && <TreeInventory />}
+        <RouteLines result={routeResult} />
+
+        {activeLayers.greenery && routeResult && (
+          <LayerGroup>
+            <GreeneryPoints points={routeResult.greenery} />
+          </LayerGroup>
+        )}
+
+        <RouteEndpoints result={routeResult} />
 
         {userPosition && (
           <CircleMarker
@@ -236,6 +266,7 @@ function Map({ activeLayers, userPosition }) {
         )}
 
         <RecenterMap position={userPosition} />
+        <FitRoute result={routeResult} />
       </MapContainer>
     </section>
   )
