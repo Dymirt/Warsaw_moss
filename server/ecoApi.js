@@ -1,4 +1,5 @@
 const WARSAW_API = 'https://api.um.warszawa.pl/api/action'
+const WARSAW_PROXY_PATH = '/api/warsaw-proxy'
 const NOMINATIM_API = 'https://nominatim.openstreetmap.org'
 const VALHALLA_API = 'https://valhalla1.openstreetmap.de/route'
 const PROJECT_USER_AGENT =
@@ -8,6 +9,32 @@ const WARSAW_REQUEST_OPTIONS = {
     Accept: 'application/json',
     'User-Agent': PROJECT_USER_AGENT,
   },
+}
+
+function createWarsawRequest(action, searchParams, apiToken) {
+  const proxyToken = apiToken || process.env.WARSAW_API_TOKEN
+
+  if (process.env.VERCEL_URL && proxyToken) {
+    const url = new URL(`https://${process.env.VERCEL_URL}${WARSAW_PROXY_PATH}`)
+    const proxyParams = new URLSearchParams(searchParams)
+    proxyParams.delete('apikey')
+    proxyParams.set('action', action)
+    url.search = proxyParams
+
+    return {
+      url,
+      options: {
+        headers: {
+          ...WARSAW_REQUEST_OPTIONS.headers,
+          Authorization: `Bearer ${proxyToken}`,
+        },
+      },
+    }
+  }
+
+  const url = new URL(`${WARSAW_API}/${action}/`)
+  url.search = new URLSearchParams(searchParams)
+  return { url, options: WARSAW_REQUEST_OPTIONS }
 }
 
 const WARSAW_VIEWBOX = '20.8517,52.3681,21.2712,52.0978'
@@ -304,8 +331,7 @@ async function fetchGreeneryResource(type, district) {
   const cacheKey = `greenery:${type}:${district}`
 
   return cached(cacheKey, CACHE_TTL.greenery, async () => {
-    const url = new URL(`${WARSAW_API}/datastore_search`)
-    url.search = new URLSearchParams({
+    const request = createWarsawRequest('datastore_search', {
       resource_id: resource.id,
       filters: JSON.stringify({ dzielnica: district }),
       fields: resource.fields,
@@ -313,8 +339,8 @@ async function fetchGreeneryResource(type, district) {
     })
 
     const payload = await fetchJson(
-      url,
-      WARSAW_REQUEST_OPTIONS,
+      request.url,
+      request.options,
       'Warsaw greenery data',
     )
     const records = payload.result?.records
@@ -609,11 +635,14 @@ export async function getAirQuality(apiToken) {
   }
 
   return cached('air-quality', CACHE_TTL.air, async () => {
-    const url = new URL(`${WARSAW_API}/air_sensors_get/`)
-    url.searchParams.set('apikey', apiToken)
+    const request = createWarsawRequest(
+      'air_sensors_get',
+      { apikey: apiToken },
+      apiToken,
+    )
     const payload = await fetchJson(
-      url,
-      WARSAW_REQUEST_OPTIONS,
+      request.url,
+      request.options,
       'Warsaw air-quality service',
     )
 
