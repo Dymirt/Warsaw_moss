@@ -206,6 +206,29 @@ function GreeneryPoints({ points }) {
   })
 }
 
+function GreenWaypoints({ points = [] }) {
+  return points.map((point, index) => (
+    <CircleMarker
+      key={`${point.lon}-${point.lat}-${index}`}
+      center={[point.lat, point.lon]}
+      radius={6}
+      pathOptions={{
+        color: '#ffffff',
+        fillColor: '#e6a637',
+        fillOpacity: 1,
+        opacity: 1,
+        weight: 2,
+      }}
+    >
+      <Popup>
+        <strong>Tree-guided waypoint</strong>
+        <br />
+        Selected from a cluster of {point.treeCount} trees
+      </Popup>
+    </CircleMarker>
+  ))
+}
+
 function RouteEndpoints({ result }) {
   if (!result) return null
 
@@ -257,6 +280,7 @@ function Map({ activeLayers, airStations, routeResult, userPosition }) {
         {activeLayers.greenery && routeResult && (
           <LayerGroup>
             <GreeneryPoints points={selectedGreenery} />
+            <GreenWaypoints points={selectedRoute?.greenWaypoints} />
           </LayerGroup>
         )}
 

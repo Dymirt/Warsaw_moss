@@ -75,7 +75,11 @@ const Banner = ({
             <div className="result-heading">
               <div>
                 <p className="eyebrow">
-                  {isRecommendedRoute ? 'Recommended' : 'Selected alternative'}
+                  {selectedRoute.routeKind === 'tree-guided'
+                    ? 'Tree-guided route'
+                    : isRecommendedRoute
+                      ? 'Recommended'
+                      : 'Selected alternative'}
                 </p>
                 <h2 id="route-result-title">
                   {isRecommendedRoute ? 'Greener route' : 'Route alternative'}
@@ -100,6 +104,12 @@ const Banner = ({
               Within 5 m: {selectedEcoCounts.tree.toLocaleString()} trees,{' '}
               {selectedEcoCounts.shrub.toLocaleString()} shrubs, and{' '}
               {selectedEcoCounts.forest.toLocaleString()} forest records.
+              {selectedRoute.greenWaypoints?.length > 0 && (
+                <>
+                  {' '}Routed through {selectedRoute.greenWaypoints.length} tree{' '}
+                  {selectedRoute.greenWaypoints.length === 1 ? 'cluster' : 'clusters'}.
+                </>
+              )}
             </p>
             <div className="route-options" aria-label="Compared route alternatives">
               {result.routes.map((route, index) => {
@@ -114,7 +124,13 @@ const Banner = ({
                     aria-pressed={isSelected}
                     onClick={() => onSelectRoute(route.id)}
                   >
-                    {isRecommended ? 'Best green' : `Option ${index + 1}`}
+                    {route.routeKind === 'tree-guided'
+                      ? isRecommended
+                        ? 'Tree guided · Best'
+                        : 'Tree guided'
+                      : isRecommended
+                        ? 'Best green'
+                        : `Option ${index + 1}`}
                     <small>
                       {route.greenScore ?? '—'}/100 · {formatDistance(route.distance)}
                     </small>
