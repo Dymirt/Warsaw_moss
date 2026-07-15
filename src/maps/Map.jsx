@@ -225,6 +225,9 @@ function GreenWaypoints({ points = [] }) {
         <br />
         Nearby: {point.treeCount} trees, {point.shrubCount} shrubs, and{' '}
         {point.forestCount} forest records
+        {point.greenAreaName && (
+          <><br />Inside {point.greenAreaName}</>
+        )}
       </Popup>
     </CircleMarker>
   ))

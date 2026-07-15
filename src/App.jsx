@@ -114,7 +114,7 @@ function App() {
         setRouteState({
           status: 'loading',
           result: null,
-          message: 'Building a route through tree-rich streets...',
+          message: 'Building a route through trees, parks, and green areas...',
         })
 
         const payload = await requestJson('/api/route', {

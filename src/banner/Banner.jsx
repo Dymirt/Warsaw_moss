@@ -41,6 +41,7 @@ const Banner = ({
   const isRecommendedRoute = selectedRoute?.id === recommendedRouteId
   const selectedGreenery = selectedRoute?.greenery ?? result?.greenery ?? []
   const selectedEcoCounts = selectedRoute?.ecoCounts ?? result?.ecoCounts
+  const selectedAreaCoverage = selectedRoute?.greenAreaCoverage
 
   function submitRoute(event) {
     event.preventDefault()
@@ -65,8 +66,8 @@ const Banner = ({
           <p className="eyebrow">Green routing for Warsaw</p>
           <h1 id="app-title">Take the greener way</h1>
           <p>
-            Compare real walking and cycling alternatives by trees, shrubs, and
-            forest records within 5 metres of each route.
+            Compare real walking and cycling alternatives by trees, shrubs,
+            forests, parks, and other mapped green areas.
           </p>
         </div>
 
@@ -104,6 +105,15 @@ const Banner = ({
               Within 5 m: {selectedEcoCounts.tree.toLocaleString()} trees,{' '}
               {selectedEcoCounts.shrub.toLocaleString()} shrubs, and{' '}
               {selectedEcoCounts.forest.toLocaleString()} forest records.
+              {selectedAreaCoverage?.greenMeters > 0 && (
+                <>
+                  {' '}{formatDistance(selectedAreaCoverage.greenMeters)} through mapped green
+                  areas ({selectedAreaCoverage.percent}%).
+                  {selectedAreaCoverage.parks.length > 0 && (
+                    <> Parks include {selectedAreaCoverage.parks.slice(0, 2).join(' and ')}.</>
+                  )}
+                </>
+              )}
               {selectedRoute.greenWaypoints?.length > 0 && (
                 <>
                   {' '}Routed through {selectedRoute.greenWaypoints.length} green corridor{' '}
@@ -140,7 +150,7 @@ const Banner = ({
             </div>
             {result.warnings.length > 0 && (
               <p className="data-warning">
-                Some live greenery feeds did not respond; available records were used.
+                Some greenery feeds did not respond; available records were used.
               </p>
             )}
           </section>
@@ -258,7 +268,7 @@ const Banner = ({
                   <strong>Route greenery</strong>
                   <small>
                     {result
-                      ? `${selectedGreenery.length} points within 5 m`
+                      ? `${selectedGreenery.length} nearby points · ${selectedAreaCoverage?.percent ?? 0}% green area`
                       : 'Appears after routing'}
                   </small>
                 </span>
@@ -275,7 +285,7 @@ const Banner = ({
         </section>
 
         <p className="data-note">
-          Live Warsaw Open Data. Air readings cache for 5 minutes; greenery for 1 hour.
+          Warsaw Open Data points and OpenStreetMap green areas. Cached by the API.
         </p>
       </aside>
     </>

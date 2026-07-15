@@ -16,7 +16,9 @@ requests, private Warsaw token, and persistent caches live in the separate
 - Display the green score and detour for every route.
 - Show every environmental inventory record within 5 metres of each alternative.
 - Discover greenery across districts along longer Warsaw routes.
-- Build a citywide green-density path from the complete greenery inventory.
+- Build a citywide green-density path from the complete point inventory and mapped
+  parks, nature reserves, recreation grounds, village greens, and urban greenery.
+- Prefer routable streets and paths through parks while excluding private green areas.
 - Display the intermediate green-corridor anchors used for routing.
 - Display live air-quality stations.
 - Center the map on the user's location with explicit browser permission.
